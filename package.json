@@ -1,0 +1,29 @@
+{
+  "name": "twiz-client-accesstoken",
+  "version": "1.0.0",
+  "description": "Access Token leg of OAuth 1.0 a for twiz-client",
+  "main": "src/AccessToken.js",
+  "scripts": {
+    "lint": "eslint src/AccessToken.js",
+    "instrument": "istanbul instrument src/AccessToken.js --output src/AccessToken_instrumented.js",
+    "browserify": "./node_modules/browserify/bin/cmd.js test/accesstoken.js -o test/accesstoken_bundle.js",
+    "mocha-headless": "mocha-headless-chrome -f mocha-test.html -c test/coverage.json",
+    "report": "istanbul report --root test/ lcov",
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
+    "test": "npm run instrument && npm run browserify && npm run mocha-headless && npm run report"
+  },
+  "author": "github.com/gits2501",
+  "license": "MIT",
+  "dependencies": {
+    "twiz-client-oauth": "file:../twiz-client-oauth",
+    "twiz-client-redirect": "file:../twiz-client-redirect"
+  },
+  "devDependencies": {
+    "browserify": "^16.2.0",
+    "coveralls": "^3.0.0",
+    "eslint": "^4.19.1",
+    "istanbul": "^0.4.5",
+    "mocha": "^5.1.1",
+    "mocha-headless-chrome": "^2.0.0"
+  }
+}
