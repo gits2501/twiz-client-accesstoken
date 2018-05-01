@@ -1,7 +1,8 @@
 var OAuth       = require('twiz-client-oauth');
 var deliverData = require('twiz-client-redirect').prototype.deliverData;
 
- function AccessToken (){         // checks that oauth data is in redirection(callback) url, and makes sure
+ function AccessToken (){         // Prepares data for Access Token leg
+                                  // Checks that oauth data is in redirection(callback) url, and makes sure
                                   // that oauth_token from url matches the one we saved in first step. 
       OAuth.call(this);
       this.name = this.leg[2];
@@ -20,7 +21,9 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
          requestTokenNotSet: 'Request token was not set',
          requestTokenNotSaved: 'Request token was not saved. Check that page url from which you make request match your redirection_url.',
          noRepeat: "Cannot make another request with same redirection(callback) url",
-         noStringProvided: "Expected string was not provided"
+         urlNotFound: "Current window location (url) not found",
+         noSessionData: 'Unable to find session data in current url',
+         spaWarning: 'Authorization data not found in url'
       })
    }
   
@@ -28,18 +31,16 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
 
    AccessToken.prototype.setAuthorizedTokens = function(){
 
-      this.authorizeRedirectionUrl(),
-                                             // set params for access token leg explicitly 
-      this.oauth[this.prefix + 'verifier'] = this.authorized.oauth_verifier // Put authorized verifier
-      this.oauth[this.prefix + 'token']    = this.authorized.oauth_token;   // Authorized token
+     this.parseRedirectionUrl(this.winLoc);        // parse url 
+     /* istanbul ignore else */
+     if(this.isAuthorizationDataInURL()){ 
+         this.authorize(this.redirectionData);     // authorize token
+                                                   // set params for access token leg explicitly 
+         this.oauth[this.prefix + 'verifier'] = this.authorized.oauth_verifier // Put authorized verifier
+         this.oauth[this.prefix + 'token']    = this.authorized.oauth_token;   // Authorized token
+     }
    }
  
-   AccessToken.prototype.authorizeRedirectionUrl = function(){// makes sure we have needed data in redirection url
-     this.parseRedirectionUrl(this.winLoc);          // parse 
-     return this.authorize(this.redirectionData);    // authorize token
-     
-   }
-
    AccessToken.prototype.parseRedirectionUrl = function(url){ // parses data in url 
       // console.log('in parseRedirectionUrl');
 
@@ -48,12 +49,12 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
 
       this.redirectionUrlParsed = true;                    // indicate that the url was already parsed  
       
-      // console.log(this.redirectionData.twiz_);
+      // console.log('redirectionData: >>', this.redirectionData);
    }
 
    AccessToken.prototype.parse = function(str, delimiter1, delimiter2){ // parses substring of a string (str) 
                                                                      
-       if(!str) throw this.CustomError('noStringProvided');
+       if(!str) throw this.CustomError('urlNotFound');
 
        var start = str.search(delimiter1);   // calculate from which index to take 
        var end ; 
@@ -69,13 +70,11 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
      
    AccessToken.prototype.parseQueryParams = function (str){
       var arr  = [];
-      if(!str) throw this.CustomError('noStringProvided');
        
-
       if(str[0] === "?") str = str.substring(1); // remove "?" if we have one at beggining
 
       arr = str.split('&')                       // make new array element on each "&" 
-            .map( function(el, i){ 
+            .map( function(el){ 
                  var arr2 =  el.split("=");      // for each element make new array element on each "=" 
                  return arr2;   
 
@@ -101,14 +100,19 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
       
       return data;
    } 
-   
+  // 
+   AccessToken.prototype.isAuthorizationDataInURL = function(){ // check that we have valid twitter redirection url
+       if(!this.redirectionData.oauth_token && !this.redirectionData.oauth_verifier){ // not a redirection url
+           throw this.CustomError('spaWarning');
+       }
+       else return true
+   }
    AccessToken.prototype.authorize = function(sent){ // check that sent data from redirection url has needed info
      
+       //console.log('in authorize');
       if(this.isRequestTokenUsed(window.localStorage))          
         throw this.CustomError('noRepeat');
       
-
-      // console.log('in authorize')
       if(!sent.oauth_verifier) throw this.CustomError('verifierNotFound');
       if(!sent.oauth_token)    throw this.CustomError('tokenNotFound');
 
@@ -123,13 +127,13 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
    AccessToken.prototype.isRequestTokenUsed = function(storage){ // check that we have a token to use 
 
      if(storage.requestToken_ === "null") return true; // token whould be "null" only when  loadRequestToken() 
-                                                       // run twice on same redirection(callback) url
+                                                       // runs twice on same redirection(callback) url
      return false;
    }
 
    
 
-   AccessToken.prototype.loadRequestToken = function(storage, sent){
+   AccessToken.prototype.loadRequestToken = function(storage){
      
      if(!storage.hasOwnProperty('requestToken_')) throw this.CustomError('requestTokenNotSaved');  
 
@@ -141,33 +145,33 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
      storage.requestToken_ = null;                              // since we've loaded the token, mark it as 
                                                                 // used/erased with null 
      // console.log('after erasing storage.requestToken :', storage.requestToken_);  
-     
-     if (!this.loadedRequestToken) throw this.CustomError('requestTokenNotSet');
+     // console.log('loadedRequestToken',this.loadedRequestToken);
+     if(!this.loadedRequestToken) throw this.CustomError('requestTokenNotSet');
    }
    
    AccessToken.prototype.getSessionData = function(){       // gets session data from redirection url
-         console.log('in getSessionData')
-         if(!this.redirectionUrlParsed); 
-          this.parseRedirectionUrl(window.location.href); // parse data from url 
+         //  console.log('in getSessionData')
+         if(!this.redirectionUrlParsed) 
+          this.parseRedirectionUrl(window.location.href);   // parse data from url 
          
-         if(!this.redirectionData.data){                  // return if no session data
-            console.log(this.messages.noSessionData);
-            return; 
-         }                          
+         if(!this.redirectionData.data){  // return if no session data
+            console.warn(this.messages['noSessionData']);
+            return;
+         }
           
          this.sessionData = this.parseSessionData(this.redirectionData.data) // further parsing of session data
-         console.log(this.sessionData);
+         //console.log('sessionData: ',this.sessionData);
          return this.sessionData;
    }
 
    AccessToken.prototype.parseSessionData = function(str){
-       if(/%[0-9][0-9]/g.test(str))                       // See if there are percent encoded chars
+       if(/%[0-9A-Z][0-9A-Z]/g.test(str))           // See if there are percent encoded chars
        str = decodeURIComponent(decodeURIComponent(str)); // Decoding twice, since it was encoded twice
                                                           // (by OAuth 1.0a specification). See genSBS function.
        return this.parseQueryParams(str);                 // Making an object from parsed key/values.
    }
 
-   AccessToken.prototype.deliverData = deliverData;  // borrow function from Redirect module
+   AccessToken.prototype.deliverData = deliverData;       // borrow function from Redirect module
 
    module.exports = AccessToken;
 

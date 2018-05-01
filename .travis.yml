@@ -1,10 +1,9 @@
 language: node_js
 node_js:
  - '8.6.0'
+ - '9.11.1'
 git:
   depth: 3
-before_install: 
-    - 'sudo apt-get update && sudo apt-get install linux-image-generic '
 after_success: 'npm run coveralls' 
 cache:
   directiories:
