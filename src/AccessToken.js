@@ -1,7 +1,8 @@
 var OAuth       = require('twiz-client-oauth');
 var deliverData = require('twiz-client-redirect').prototype.deliverData;
 
- function AccessToken (){         // checks that oauth data is in redirection(callback) url, and makes sure
+ function AccessToken (){         // Prepares data for Access Token leg
+                                  // Checks that oauth data is in redirection(callback) url, and makes sure
                                   // that oauth_token from url matches the one we saved in first step. 
       OAuth.call(this);
       this.name = this.leg[2];
@@ -20,7 +21,8 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
          requestTokenNotSet: 'Request token was not set',
          requestTokenNotSaved: 'Request token was not saved. Check that page url from which you make request match your redirection_url.',
          noRepeat: "Cannot make another request with same redirection(callback) url",
-         noStringProvided: "Expected string was not provided"
+         urlNotFound: "Current window location (url) not found",
+         noSessionData: 'Unable to find session data in current url'
       })
    }
   
@@ -35,7 +37,7 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
    }
  
    AccessToken.prototype.authorizeRedirectionUrl = function(){// makes sure we have needed data in redirection url
-     this.parseRedirectionUrl(this.winLoc);          // parse 
+     this.parseRedirectionUrl(this.winLoc);          // parse url 
      return this.authorize(this.redirectionData);    // authorize token
      
    }
@@ -53,7 +55,7 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
 
    AccessToken.prototype.parse = function(str, delimiter1, delimiter2){ // parses substring of a string (str) 
                                                                      
-       if(!str) throw this.CustomError('noStringProvided');
+       if(!str) throw this.CustomError('urlNotFound');
 
        var start = str.search(delimiter1);   // calculate from which index to take 
        var end ; 
@@ -69,9 +71,7 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
      
    AccessToken.prototype.parseQueryParams = function (str){
       var arr  = [];
-      if(!str) throw this.CustomError('noStringProvided');
        
-
       if(str[0] === "?") str = str.substring(1); // remove "?" if we have one at beggining
 
       arr = str.split('&')                       // make new array element on each "&" 
@@ -123,7 +123,7 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
    AccessToken.prototype.isRequestTokenUsed = function(storage){ // check that we have a token to use 
 
      if(storage.requestToken_ === "null") return true; // token whould be "null" only when  loadRequestToken() 
-                                                       // run twice on same redirection(callback) url
+                                                       // runs twice on same redirection(callback) url
      return false;
    }
 
@@ -146,17 +146,15 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
    }
    
    AccessToken.prototype.getSessionData = function(){       // gets session data from redirection url
-         console.log('in getSessionData')
-         if(!this.redirectionUrlParsed); 
-          this.parseRedirectionUrl(window.location.href); // parse data from url 
+         //  console.log('in getSessionData')
+         if(!this.redirectionUrlParsed) 
+          this.parseRedirectionUrl(window.location.href);   // parse data from url 
          
-         if(!this.redirectionData.data){                  // return if no session data
-            console.log(this.messages.noSessionData);
-            return; 
-         }                          
+         if(!this.redirectionData.data) throw this.CustomError("noSessionData");  // return if no session data
+            
           
          this.sessionData = this.parseSessionData(this.redirectionData.data) // further parsing of session data
-         console.log(this.sessionData);
+         //console.log('sessionData: ',this.sessionData);
          return this.sessionData;
    }
 
@@ -167,7 +165,7 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
        return this.parseQueryParams(str);                 // Making an object from parsed key/values.
    }
 
-   AccessToken.prototype.deliverData = deliverData;  // borrow function from Redirect module
+   AccessToken.prototype.deliverData = deliverData;       // borrow function from Redirect module
 
    module.exports = AccessToken;
 
