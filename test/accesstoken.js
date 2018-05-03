@@ -112,11 +112,11 @@ describe('Access Token', function(){
 
       describe('session data', function(){
 
-         it('session data not found - throw error', function(){                    
+         it('session data not found - log warning on console', function(){                    
             at.winLoc = pageUrl + '?' + request_token.substring(1) + verifier;   // leave out session data
             window.localStorage.requestToken_ = request_token;                   // make token fresh 
             at.redirectionUrlParsed = false;                                     // parse again 
-            assert.throws(at.getSessionData.bind(at), errorValidation.bind(null, 'noSessionData'));
+            assert.doesNotThrow(at.getSessionData.bind(at), undefined);
          })
 
       })

@@ -150,8 +150,10 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
          if(!this.redirectionUrlParsed) 
           this.parseRedirectionUrl(window.location.href);   // parse data from url 
          
-         if(!this.redirectionData.data) throw this.CustomError("noSessionData");  // return if no session data
-            
+         if(!this.redirectionData.data){  // return if no session data
+            console.warn(this.messages['noSessionData']);
+            return;
+         }
           
          this.sessionData = this.parseSessionData(this.redirectionData.data) // further parsing of session data
          //console.log('sessionData: ',this.sessionData);
