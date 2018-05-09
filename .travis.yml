@@ -1,6 +1,7 @@
 language: node_js
 node_js:
  - '8.6.0'
+ - '9.11.1'
 git:
   depth: 3
 before_install: 

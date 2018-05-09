@@ -50,7 +50,7 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
 
       this.redirectionUrlParsed = true;                    // indicate that the url was already parsed  
       
-      // console.log(this.redirectionData.twiz_);
+      // console.log('redirectionData: >>', this.redirectionData);
    }
 
    AccessToken.prototype.parse = function(str, delimiter1, delimiter2){ // parses substring of a string (str) 
@@ -104,11 +104,10 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
    
    AccessToken.prototype.authorize = function(sent){ // check that sent data from redirection url has needed info
      
+      // console.log('in authorize');
       if(this.isRequestTokenUsed(window.localStorage))          
         throw this.CustomError('noRepeat');
       
-
-      // console.log('in authorize')
       if(!sent.oauth_verifier) throw this.CustomError('verifierNotFound');
       if(!sent.oauth_token)    throw this.CustomError('tokenNotFound');
 
@@ -141,7 +140,7 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
      storage.requestToken_ = null;                              // since we've loaded the token, mark it as 
                                                                 // used/erased with null 
      // console.log('after erasing storage.requestToken :', storage.requestToken_);  
-     
+     // console.log('loadedRequestToken',this.loadedRequestToken);
      if (!this.loadedRequestToken) throw this.CustomError('requestTokenNotSet');
    }
    
@@ -161,7 +160,7 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
    }
 
    AccessToken.prototype.parseSessionData = function(str){
-       if(/%[0-9][0-9]/g.test(str))                       // See if there are percent encoded chars
+       if(/%[0-9A-Z][0-9A-Z]/g.test(str))           // See if there are percent encoded chars
        str = decodeURIComponent(decodeURIComponent(str)); // Decoding twice, since it was encoded twice
                                                           // (by OAuth 1.0a specification). See genSBS function.
        return this.parseQueryParams(str);                 // Making an object from parsed key/values.
