@@ -7,7 +7,7 @@
     "lint": "eslint src/AccessToken.js",
     "instrument": "istanbul instrument src/AccessToken.js --output src/AccessToken_instrumented.js",
     "browserify": "./node_modules/browserify/bin/cmd.js test/accesstoken.js --exclude btoa -o test/accesstoken_bundle.js",
-    "mocha-headless": "mocha-headless-chrome -f mocha-test.html -c test/coverage.json",
+    "mocha-headless": "mocha-headless-chrome -a no-sandbox -f mocha-test.html -c test/coverage.json",
     "report": "istanbul report --root test/ lcov",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "test": "npm run instrument && npm run browserify && npm run mocha-headless && npm run report"

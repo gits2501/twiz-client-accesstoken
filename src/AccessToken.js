@@ -75,7 +75,7 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
       if(str[0] === "?") str = str.substring(1); // remove "?" if we have one at beggining
 
       arr = str.split('&')                       // make new array element on each "&" 
-            .map( function(el, i){ 
+            .map( function(el){ 
                  var arr2 =  el.split("=");      // for each element make new array element on each "=" 
                  return arr2;   
 
@@ -128,7 +128,7 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
 
    
 
-   AccessToken.prototype.loadRequestToken = function(storage, sent){
+   AccessToken.prototype.loadRequestToken = function(storage){
      
      if(!storage.hasOwnProperty('requestToken_')) throw this.CustomError('requestTokenNotSaved');  
 
