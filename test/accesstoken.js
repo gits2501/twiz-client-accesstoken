@@ -23,7 +23,7 @@ describe('Access Token', function(){
                                                                        // token leg). Remove 'oauth_token='
       
 
-      it('ready ', function(){ 
+      it('ready ', function(){
           at.winLoc += query;                              // mock curent location with tokens from twitter 
           assert.doesNotThrow(at.setAuthorizedTokens.bind(at));
       })
@@ -95,19 +95,21 @@ describe('Access Token', function(){
          delete window.localStorage.requestToken_ ;              // make like token was not saved
          assert.throws(at.setAuthorizedTokens.bind(at), errorValidation.bind(null, 'requestTokenNotSaved'));
       })
+    
+      it('token missmatch - throw error', function(){                    // Check that received request_token 
+                                                                         //  is same as  the one that is sent
+         at.winLoc = pageUrl + session_data + request_token + verifier;  // Set current location (url)
+         window.localStorage.requestToken_ = 'NotSameAsTheOneReceived';  // Make saved request_token different 
+         assert.throws(at.setAuthorizedTokens.bind(at), errorValidation.bind(null, 'tokenMissmatch'));
+      })
 
-
-       it('request token not set', function(){                   // property is there but has no value
+      it('request token not set', function(){                   // property is there but has no value
          at.winLoc = session_data + request_token + verifier;    // set current location (url)
          window.localStorage.requestToken_ = '';                 // make token fresh 
          assert.throws(at.setAuthorizedTokens.bind(at), errorValidation.bind(null, 'requestTokenNotSet'));
       })
 
-      it('request token not set', function(){                    // property is there but has no value
-         at.winLoc = pageUrl + session_data + request_token + verifier;    // set current location (url)
-         window.localStorage.requestToken_ = '';                 // make token fresh 
-         assert.throws(at.setAuthorizedTokens.bind(at), errorValidation.bind(null, 'requestTokenNotSet'));
-      })
+      
 
 
       describe('session data', function(){
@@ -121,6 +123,15 @@ describe('Access Token', function(){
 
       })
       
+      describe('spa apps warning', function(){
+
+           it('Authorization data not found in url - throw error', function(){
+               at.winLoc = 'https://myApp.com/noQueryString'; // simulate no authorization data (request token 
+                                                              // and verifier)
+               assert.throws(at.setAuthorizedTokens.bind(at), errorValidation.bind(null, 'spaWarning'));
+           })
+
+      })
    })
 
   
