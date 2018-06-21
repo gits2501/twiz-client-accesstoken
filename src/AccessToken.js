@@ -22,7 +22,8 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
          requestTokenNotSaved: 'Request token was not saved. Check that page url from which you make request match your redirection_url.',
          noRepeat: "Cannot make another request with same redirection(callback) url",
          urlNotFound: "Current window location (url) not found",
-         noSessionData: 'Unable to find session data in current url'
+         noSessionData: 'Unable to find session data in current url',
+         spaWarning: 'Authorization data not found in url'
       })
    }
   
@@ -30,15 +31,17 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
 
    AccessToken.prototype.setAuthorizedTokens = function(){
 
-      this.authorizeRedirectionUrl(),
-                                             // set params for access token leg explicitly 
-      this.oauth[this.prefix + 'verifier'] = this.authorized.oauth_verifier // Put authorized verifier
-      this.oauth[this.prefix + 'token']    = this.authorized.oauth_token;   // Authorized token
+     this.parseRedirectionUrl(this.winLoc);        // parse url 
+     /* istanbul ignore else */
+     if(this.isAuthorizationDataInURL()){ 
+         this.authorize(this.redirectionData);     // authorize token
+                                                   // set params for access token leg explicitly 
+         this.oauth[this.prefix + 'verifier'] = this.authorized.oauth_verifier // Put authorized verifier
+         this.oauth[this.prefix + 'token']    = this.authorized.oauth_token;   // Authorized token
+     }
    }
  
    AccessToken.prototype.authorizeRedirectionUrl = function(){// makes sure we have needed data in redirection url
-     this.parseRedirectionUrl(this.winLoc);          // parse url 
-     return this.authorize(this.redirectionData);    // authorize token
      
    }
 
@@ -101,10 +104,16 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
       
       return data;
    } 
-   
+  // 
+   AccessToken.prototype.isAuthorizationDataInURL = function(){ // check that we have valid twitter redirection url
+       if(!this.redirectionData.oauth_token && !this.redirectionData.oauth_verifier){ // not a redirection url
+           throw this.CustomError('spaWarning');
+       }
+       else return true
+   }
    AccessToken.prototype.authorize = function(sent){ // check that sent data from redirection url has needed info
      
-      // console.log('in authorize');
+       //console.log('in authorize');
       if(this.isRequestTokenUsed(window.localStorage))          
         throw this.CustomError('noRepeat');
       
@@ -141,7 +150,7 @@ var deliverData = require('twiz-client-redirect').prototype.deliverData;
                                                                 // used/erased with null 
      // console.log('after erasing storage.requestToken :', storage.requestToken_);  
      // console.log('loadedRequestToken',this.loadedRequestToken);
-     if (!this.loadedRequestToken) throw this.CustomError('requestTokenNotSet');
+     if(!this.loadedRequestToken) throw this.CustomError('requestTokenNotSet');
    }
    
    AccessToken.prototype.getSessionData = function(){       // gets session data from redirection url
