@@ -16,8 +16,7 @@
   "license": "MIT",
   "dependencies": {
     "twiz-client-oauth": "https://github.com/gits2501/twiz-client-oauth",
-    "twiz-client-redirect": "https://github.com/gits2501/twiz-client-redirect",
-    "twiz-client-utils": "https://github.com/gits2501/twiz-client-utils"
+    "twiz-client-redirect": "https://github.com/gits2501/twiz-client-redirect"
   },
   "repository": {
     "type": "git",
